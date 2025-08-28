@@ -178,39 +178,142 @@ Get secret value with auto-generation support
 {{- end }}
 
 {{/*
-Generate environment variables
+Generate environment variables from configInjection.env configuration
 */}}
 {{- define "api-service.envVars" -}}
-{{- range $key, $value := .Values.env }}
-- name: {{ $key }}
-  value: {{ $value | quote }}
+{{- $context := . -}}
+
+{{/* Individual environment variables */}}
+{{- range .Values.configInjection.env.individual }}
+- name: {{ .name }}
+  {{- if .value }}
+  value: {{ .value | quote }}
+  {{- else if .valueFrom }}
+  valueFrom:
+    {{- toYaml .valueFrom | nindent 4 }}
+  {{- end }}
 {{- end }}
 {{- end }}
 
 {{/*
-Generate secret environment variables
+Generate envFrom for secrets and configmaps
 */}}
-{{- define "api-service.secretEnvVars" -}}
-{{- range $key, $value := .Values.secrets.data }}
-- name: {{ $key }}
-  valueFrom:
-    secretKeyRef:
-      name: {{ include "api-service.secretName" $ }}
-      key: {{ $key }}
+{{- define "api-service.envFrom" -}}
+{{- $context := . -}}
+
+{{/* Secrets envFrom */}}
+{{- if .Values.configInjection.env.secrets.enabled }}
+{{- if .Values.configInjection.env.secrets.sources }}
+{{/* Use specified sources */}}
+{{- range .Values.configInjection.env.secrets.sources }}
+- secretRef:
+    name: {{ .secretName }}
+    {{- if .optional }}
+    optional: {{ .optional }}
+    {{- end }}
+{{- end }}
+{{- else }}
+{{/* Auto-detect secrets to inject */}}
+{{- if .Values.secrets.create }}
+- secretRef:
+    name: {{ include "api-service.secretName" $context }}
+{{- end }}
+{{- if .Values.vaultSecret.create }}
+- secretRef:
+    name: {{ include "api-service.fullname" $context }}-vault
+    optional: true
+{{- end }}
 {{- end }}
 {{- end }}
 
+{{/* ConfigMaps envFrom */}}
+{{- if .Values.configInjection.env.configMaps.enabled }}
+{{- if .Values.configInjection.env.configMaps.sources }}
+{{/* Use specified sources */}}
+{{- range .Values.configInjection.env.configMaps.sources }}
+- configMapRef:
+    name: {{ .configMapName }}
+    {{- if .optional }}
+    optional: {{ .optional }}
+    {{- end }}
+{{- end }}
+{{- else }}
+{{/* Auto-detect configmaps to inject */}}
+{{- if .Values.configMap.create }}
+- configMapRef:
+    name: {{ include "api-service.configMapName" $context }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
 
 {{/*
-Generate config environment variables
+Generate volumes for file-based injection
 */}}
-{{- define "api-service.configEnvVars" -}}
-{{- range $key, $value := .Values.configMap.data }}
-- name: {{ $key }}
-  valueFrom:
-    configMapKeyRef:
-      name: {{ include "api-service.configMapName" $ }}
-      key: {{ $key }}
+{{- define "api-service.configVolumes" -}}
+{{- $context := . -}}
+
+{{/* Secret volumes */}}
+{{- range .Values.configInjection.files.secrets }}
+- name: {{ printf "secret-%s" (.secretName | replace "-" "") | trunc 63 | trimSuffix "-" }}
+  secret:
+    secretName: {{ .secretName }}
+    {{- if .defaultMode }}
+    defaultMode: {{ .defaultMode }}
+    {{- end }}
+    {{- if .items }}
+    items:
+      {{- toYaml .items | nindent 6 }}
+    {{- end }}
+{{- end }}
+
+{{/* ConfigMap volumes */}}
+{{- range .Values.configInjection.files.configMaps }}
+- name: {{ printf "configmap-%s" (.configMapName | replace "-" "") | trunc 63 | trimSuffix "-" }}
+  configMap:
+    name: {{ .configMapName }}
+    {{- if .defaultMode }}
+    defaultMode: {{ .defaultMode }}
+    {{- end }}
+    {{- if .items }}
+    items:
+      {{- toYaml .items | nindent 6 }}
+    {{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Generate volume mounts for file-based injection
+*/}}
+{{- define "api-service.configVolumeMounts" -}}
+{{- $context := . -}}
+
+{{/* Secret volume mounts */}}
+{{- range .Values.configInjection.files.secrets }}
+- name: {{ printf "secret-%s" (.secretName | replace "-" "") | trunc 63 | trimSuffix "-" }}
+  mountPath: {{ .mountPath }}
+  {{- if .readOnly }}
+  readOnly: {{ .readOnly }}
+  {{- else }}
+  readOnly: true
+  {{- end }}
+  {{- if .subPath }}
+  subPath: {{ .subPath }}
+  {{- end }}
+{{- end }}
+
+{{/* ConfigMap volume mounts */}}
+{{- range .Values.configInjection.files.configMaps }}
+- name: {{ printf "configmap-%s" (.configMapName | replace "-" "") | trunc 63 | trimSuffix "-" }}
+  mountPath: {{ .mountPath }}
+  {{- if .readOnly }}
+  readOnly: {{ .readOnly }}
+  {{- else }}
+  readOnly: true
+  {{- end }}
+  {{- if .subPath }}
+  subPath: {{ .subPath }}
+  {{- end }}
 {{- end }}
 {{- end }}
 

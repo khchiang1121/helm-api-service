@@ -158,6 +158,8 @@ ingress:
 | `serviceAccount.annotations` | object | `{}` | Annotations to add to the service account |
 | `serviceAccount.name` | string | `""` | The name of the service account to use |
 | `podAnnotations` | object | `{}` | Annotations to add to the pod |
+| `rolloutOnConfigmapChange.enabled` | bool | `true` | Automatically rollout deployment when ConfigMap changes |
+| `rolloutOnSecretChange.enabled` | bool | `true` | Automatically rollout deployment when Secret changes |
 | `podSecurityContext` | object | `{}` | Security context for the pod |
 | `securityContext` | object | `{}` | Security context for the container |
 | `service.type` | string | `"ClusterIP"` | Kubernetes service type |
@@ -322,6 +324,32 @@ vaultSecret:
       - DATABASE_URL
       - API_SECRET_KEY
 ```
+
+### Automatic Deployment Rollouts
+
+The chart supports automatic deployment rollouts when configuration changes:
+
+```yaml
+# Rollout when ConfigMap changes (default: enabled)
+rolloutOnConfigmapChange:
+  enabled: true
+
+# Rollout when Secret changes (default: enabled)  
+rolloutOnSecretChange:
+  enabled: true
+```
+
+**How it works:**
+- When enabled, the chart calculates SHA256 checksums of ConfigMap and Secret templates
+- These checksums are added as pod annotations (`checksum/configmap`, `checksum/secret`)
+- When configuration changes, checksums change, triggering automatic pod rollout
+- This ensures pods always use the latest configuration without manual intervention
+
+**Benefits:**
+- **Automatic Updates**: No need to manually restart pods after config changes
+- **Zero Downtime**: Uses rolling update strategy for seamless deployments
+- **Consistency**: Ensures all pods use the same configuration version
+- **Reliability**: Prevents configuration drift between pods
 
 ### Network Security
 

@@ -16,13 +16,16 @@ spec:
     {{- toYaml .Values.deployment.strategy | nindent 4 }}
   template:
     metadata:
-      {{- if or .Values.podAnnotations .Values.rolloutOnConfigmapChange.enabled }}
+      {{- if or .Values.podAnnotations .Values.rolloutOnConfigmapChange.enabled .Values.rolloutOnSecretChange.enabled }}
       annotations:
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
         {{- if .Values.rolloutOnConfigmapChange.enabled }}
         checksum/configmap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- end }}
+        {{- if .Values.rolloutOnSecretChange.enabled }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
         {{- end }}
       {{- end }}
       labels:

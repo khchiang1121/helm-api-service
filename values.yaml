@@ -54,6 +54,10 @@ podAnnotations: {}
 rolloutOnConfigmapChange:
   enabled: true
 
+# Rollout deployment when secret changes
+rolloutOnSecretChange:
+  enabled: true
+
 # Pod security context
 podSecurityContext: {}
   # fsGroup: 2000

@@ -17,8 +17,6 @@
 global:
   # Global image registry
   imageRegistry: ""
-  # Global image pull secrets
-  imagePullSecrets: []
   # Global storage class
   storageClass: ""
 
@@ -34,8 +32,8 @@ image:
   pullPolicy: IfNotPresent
 
 # Image pull secrets
-imagePullSecrets:
-  - name: gitlab-registry-secret
+imagePullSecrets: []
+  # - name: gitlab-registry-secret
 
 # Service account configuration
 serviceAccount:
@@ -549,7 +547,7 @@ podSecurityPolicy:
 istio:
   gateway:
     enabled: false
-    namespace: "api-service-gateway"
+    namespace: ""
     selector:
       istio: ingressgateway
     # hosts:
@@ -585,18 +583,21 @@ istio:
   virtualService:
     enabled: false
     name: "api-service-vs"
+    namespace: ""
     hosts:
       - "api-service.your-domain.com"
       - "api-service-dev.your-domain.com"
-    gateways:
-      - "istio-system/api-service-gateway"
+    gateways: []
+      # Leave empty to auto-reference the Gateway created by this chart
+      # Or specify custom gateways:
+      # - "istio-system/custom-gateway"
     http:
       - match:
           - uri:
               prefix: "/"
         route:
           - destination:
-              host: "api-service"
+              host: ""  # Leave empty to auto-use service name
               port:
                 number: 80
         timeout: 60s

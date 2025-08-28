@@ -13,8 +13,14 @@ spec:
   - {{ . | quote }}
   {{- end }}
   gateways:
+  {{- if .Values.istio.virtualService.gateways }}
   {{- range .Values.istio.virtualService.gateways }}
   - {{ . | quote }}
+  {{- end }}
+  {{- else }}
+  {{- if .Values.istio.gateway.enabled }}
+  - {{ include "api-service.gatewayFullName" . | quote }}
+  {{- end }}
   {{- end }}
   http:
   {{- range .Values.istio.virtualService.http }}

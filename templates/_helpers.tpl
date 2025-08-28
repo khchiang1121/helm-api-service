@@ -220,7 +220,7 @@ Generate envFrom for secrets and configmaps
 {{- end }}
 {{- if .Values.vaultSecret.create }}
 - secretRef:
-    name: {{ include "api-service.fullname" $context }}-vault
+    name: {{ include "api-service.secretName" $context }}
     optional: true
 {{- end }}
 {{- end }}
@@ -431,4 +431,11 @@ Generate subjects for cluster role binding
 {{- end }}
 {{- end }}
 
-
+{{/*
+Generate the full Gateway name (namespace/name)
+*/}}
+{{- define "api-service.gatewayFullName" -}}
+{{- $namespace := .Values.istio.gateway.namespace | default .Release.Namespace -}}
+{{- $name := .Values.istio.gateway.name | default (printf "%s-gateway" (include "api-service.fullname" .)) -}}
+{{- printf "%s/%s" $namespace $name -}}
+{{- end }}

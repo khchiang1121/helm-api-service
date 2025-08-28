@@ -1,0 +1,18 @@
+{{- if .Values.rbac.clusterRoleBinding.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "api-service.clusterRoleBindingName" . }}
+  labels:
+    {{- include "api-service.labels" . | nindent 4 }}
+  {{- with .Values.rbac.clusterRoleBinding.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+roleRef:
+  apiGroup: {{ .Values.rbac.clusterRoleBinding.roleRef.apiGroup }}
+  kind: {{ .Values.rbac.clusterRoleBinding.roleRef.kind }}
+  name: {{ .Values.rbac.clusterRoleBinding.roleRef.name | default (include "api-service.clusterRoleName" .) }}
+subjects:
+{{ include "api-service.clusterRoleBindingSubjects" . }}
+{{- end }}

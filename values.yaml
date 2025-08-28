@@ -46,6 +46,121 @@ serviceAccount:
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
+  # Namespace for the service account (defaults to release namespace)
+  namespace: ""
+
+# RBAC configuration
+rbac:
+  # Role configuration
+  role:
+    # Specifies whether a role should be created
+    create: false
+    # Annotations to add to the role
+    annotations: {}
+    # The name of the role to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+    # Namespace for the role (defaults to release namespace)
+    namespace: ""
+    # Rules for the role
+    rules: []
+      # Example rules:
+      # - apiGroups: [""]
+      #   resources: ["pods"]
+      #   verbs: ["get", "list", "watch"]
+      # - apiGroups: ["apps"]
+      #   resources: ["deployments"]
+      #   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # Role binding configuration
+  roleBinding:
+    # Specifies whether a role binding should be created
+    create: false
+    # Annotations to add to the role binding
+    annotations: {}
+    # The name of the role binding to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+    # Namespace for the role binding (defaults to release namespace)
+    namespace: ""
+    # Role reference
+    roleRef:
+      # API group of the role
+      apiGroup: rbac.authorization.k8s.io
+      # Kind of the role (Role or ClusterRole)
+      kind: Role
+      # Name of the role (if empty, uses the role name from rbac.role.name)
+      name: ""
+    # Subjects for the role binding
+    subjects: []
+      # Example subjects:
+      # - kind: ServiceAccount
+      #   name: ""  # If empty, uses the service account name
+      #   namespace: ""  # If empty, uses the release namespace
+      # - kind: User
+      #   name: "user@example.com"
+      #   apiGroup: rbac.authorization.k8s.io
+
+  # Cluster role configuration
+  clusterRole:
+    # Specifies whether a cluster role should be created
+    create: false
+    # Annotations to add to the cluster role
+    annotations: {}
+    # The name of the cluster role to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+    # Rules for the cluster role
+    rules: []
+      # Example rules:
+      # - apiGroups: [""]
+      #   resources: ["nodes"]
+      #   verbs: ["get", "list", "watch"]
+      # - apiGroups: [""]
+      #   resources: ["namespaces"]
+      #   verbs: ["get", "list", "watch"]
+
+  # Cluster role binding configuration
+  clusterRoleBinding:
+    # Specifies whether a cluster role binding should be created
+    create: false
+    # Annotations to add to the cluster role binding
+    annotations: {}
+    # The name of the cluster role binding to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+    # Role reference
+    roleRef:
+      # API group of the role
+      apiGroup: rbac.authorization.k8s.io
+      # Kind of the role (always ClusterRole for cluster role binding)
+      kind: ClusterRole
+      # Name of the cluster role (if empty, uses the cluster role name from rbac.clusterRole.name)
+      name: ""
+    # Subjects for the cluster role binding
+    subjects: []
+      # Example subjects:
+      # - kind: ServiceAccount
+      #   name: ""  # If empty, uses the service account name
+      #   namespace: ""  # If empty, uses the release namespace
+      # - kind: User
+      #   name: "user@example.com"
+      #   apiGroup: rbac.authorization.k8s.io
+
+# Service account secret configuration (for creating tokens)
+serviceAccountSecret:
+  # Specifies whether a service account secret should be created
+  create: false
+  # Annotations to add to the service account secret
+  annotations: {}
+  # The name of the service account secret to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+  # Namespace for the service account secret (defaults to release namespace)
+  namespace: ""
+  # Service account name to create token for
+  # If empty, uses the service account name from serviceAccount.name
+  serviceAccountName: ""
 
 # Pod annotations
 podAnnotations: {}
@@ -372,7 +487,7 @@ sidecars: []
 # Custom network policy
 networkPolicy:
   enabled: true
-  namespace: "api-service-gateway"
+  namespace: ""
   ingressRules:
     - from:
       - namespaceSelector:

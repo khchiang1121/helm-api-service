@@ -1,0 +1,19 @@
+{{- if .Values.rbac.roleBinding.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "api-service.roleBindingName" . }}
+  labels:
+    {{- include "api-service.labels" . | nindent 4 }}
+  namespace: {{ .Values.rbac.roleBinding.namespace | default .Release.Namespace }}
+  {{- with .Values.rbac.roleBinding.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+roleRef:
+  apiGroup: {{ .Values.rbac.roleBinding.roleRef.apiGroup }}
+  kind: {{ .Values.rbac.roleBinding.roleRef.kind }}
+  name: {{ .Values.rbac.roleBinding.roleRef.name | default (include "api-service.roleName" .) }}
+subjects:
+{{ include "api-service.roleBindingSubjects" . }}
+{{- end }}

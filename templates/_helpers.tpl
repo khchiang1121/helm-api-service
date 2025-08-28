@@ -317,4 +317,118 @@ Generate volume mounts for file-based injection
 {{- end }}
 {{- end }}
 
+{{/*
+Create the name of the role to use
+*/}}
+{{- define "api-service.roleName" -}}
+{{- if .Values.rbac.role.create }}
+{{- default (printf "%s-role" (include "api-service.fullname" .)) .Values.rbac.role.name }}
+{{- else }}
+{{- default "" .Values.rbac.role.name }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create the name of the role binding to use
+*/}}
+{{- define "api-service.roleBindingName" -}}
+{{- if .Values.rbac.roleBinding.create }}
+{{- default (printf "%s-rolebinding" (include "api-service.fullname" .)) .Values.rbac.roleBinding.name }}
+{{- else }}
+{{- default "" .Values.rbac.roleBinding.name }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create the name of the cluster role to use
+*/}}
+{{- define "api-service.clusterRoleName" -}}
+{{- if .Values.rbac.clusterRole.create }}
+{{- default (printf "%s-clusterrole" (include "api-service.fullname" .)) .Values.rbac.clusterRole.name }}
+{{- else }}
+{{- default "" .Values.rbac.clusterRole.name }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create the name of the cluster role binding to use
+*/}}
+{{- define "api-service.clusterRoleBindingName" -}}
+{{- if .Values.rbac.clusterRoleBinding.create }}
+{{- default (printf "%s-clusterrolebinding" (include "api-service.fullname" .)) .Values.rbac.clusterRoleBinding.name }}
+{{- else }}
+{{- default "" .Values.rbac.clusterRoleBinding.name }}
+{{- end }}
+{{- end }}
+
+{{/*
+Create the name of the service account secret to use
+*/}}
+{{- define "api-service.serviceAccountSecretName" -}}
+{{- if .Values.serviceAccountSecret.create }}
+{{- default (printf "%s-token" (include "api-service.fullname" .)) .Values.serviceAccountSecret.name }}
+{{- else }}
+{{- default "" .Values.serviceAccountSecret.name }}
+{{- end }}
+{{- end }}
+
+{{/*
+Get the service account name for RBAC resources
+*/}}
+{{- define "api-service.rbacServiceAccountName" -}}
+{{- if .Values.serviceAccountSecret.serviceAccountName }}
+{{- .Values.serviceAccountSecret.serviceAccountName }}
+{{- else }}
+{{- include "api-service.serviceAccountName" . }}
+{{- end }}
+{{- end }}
+
+{{/*
+Generate subjects for role binding
+*/}}
+{{- define "api-service.roleBindingSubjects" -}}
+{{- if .Values.rbac.roleBinding.subjects }}
+{{- range .Values.rbac.roleBinding.subjects }}
+- kind: {{ .kind }}
+  {{- if eq .kind "ServiceAccount" }}
+  name: {{ .name | default (include "api-service.rbacServiceAccountName" $) }}
+  namespace: {{ .namespace | default $.Release.Namespace }}
+  {{- else }}
+  name: {{ .name }}
+  {{- if .apiGroup }}
+  apiGroup: {{ .apiGroup }}
+  {{- end }}
+  {{- end }}
+{{- end }}
+{{- else }}
+- kind: ServiceAccount
+  name: {{ include "api-service.rbacServiceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}
+{{- end }}
+
+{{/*
+Generate subjects for cluster role binding
+*/}}
+{{- define "api-service.clusterRoleBindingSubjects" -}}
+{{- if .Values.rbac.clusterRoleBinding.subjects }}
+{{- range .Values.rbac.clusterRoleBinding.subjects }}
+- kind: {{ .kind }}
+  {{- if eq .kind "ServiceAccount" }}
+  name: {{ .name | default (include "api-service.rbacServiceAccountName" $) }}
+  namespace: {{ .namespace | default $.Release.Namespace }}
+  {{- else }}
+  name: {{ .name }}
+  {{- if .apiGroup }}
+  apiGroup: {{ .apiGroup }}
+  {{- end }}
+  {{- end }}
+{{- end }}
+{{- else }}
+- kind: ServiceAccount
+  name: {{ include "api-service.rbacServiceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}
+{{- end }}
+
 

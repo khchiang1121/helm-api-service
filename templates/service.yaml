@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "api-service.fullname" . }}
+  labels:
+    {{- include "api-service.labels" . | nindent 4 }}
+  namespace: {{ .Values.service.namespace | default .Release.Namespace }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type | default "ClusterIP" }}
+
+  {{- $ports := .Values.service.ports -}}
+  {{- if or (not $ports) (eq (len $ports) 0) -}}
+    {{- fail "service.ports must be a non-empty list" -}}
+  {{- end }}
+  ports:
+  {{- range $i, $p := $ports }}
+  - name: {{ $p.name | default (printf "port-%d" (int $p.port)) }}
+    port: {{ required (printf "service.ports[%d].port is required" $i) $p.port }}
+    targetPort: {{ $p.targetPort | default ($p.name | default (printf "port-%d" (int $p.port))) }}
+    protocol: {{ $p.protocol | default "TCP" }}
+    {{- if $p.appProtocol }}
+    appProtocol: {{ $p.appProtocol }}
+    {{- end }}
+    {{- if $p.nodePort }}
+    nodePort: {{ $p.nodePort }}
+    {{- end }}
+  {{- end }}
+  selector:
+    {{- include "api-service.selectorLabels" . | nindent 4 }}

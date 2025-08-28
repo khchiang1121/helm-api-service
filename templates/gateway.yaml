@@ -1,0 +1,38 @@
+{{- if .Values.istio.gateway.enabled -}}
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: {{ .Values.istio.gateway.name | default (printf "%s-gateway" (include "api-service.fullname" .)) }}
+  namespace: {{ .Values.istio.gateway.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "api-service.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+spec:
+  selector:
+    {{- toYaml .Values.istio.gateway.selector | nindent 4 }}
+
+  {{- $gw := .Values.istio.gateway -}}
+  {{- $servers := $gw.servers -}}
+  {{- if or (not $servers) (eq (len $servers) 0) -}}
+    {{- fail "istio.gateway.servers must be a non-empty list" -}}
+  {{- end }}
+  servers:
+  {{- range $i, $srv := $servers }}
+    {{- $hosts := (coalesce $srv.hosts $gw.hosts) -}}
+    {{- if or (not $hosts) (eq (len $hosts) 0) -}}
+      {{- fail (printf "istio.gateway.servers[%d]: hosts must be set (either per-server or istio.gateway.hosts)" $i) -}}
+    {{- end }}
+  - port:
+      number: {{ required (printf "istio.gateway.servers[%d].port.number is required" $i) $srv.port.number }}
+      name: {{ $srv.port.name | default (printf "port-%d" $srv.port.number) }}
+      protocol: {{ $srv.port.protocol | default "HTTP" }}
+    hosts:
+      {{- range $h := $hosts }}
+    - {{ $h | quote }}
+      {{- end }}
+    {{- if $srv.tls }}
+    tls:
+      {{- toYaml $srv.tls | nindent 6 }}
+    {{- end }}
+  {{- end }}
+{{- end }}

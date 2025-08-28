@@ -1,0 +1,123 @@
+{{- if .Values.certificate.enabled -}}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Values.certificate.name | default (printf "%s-tls-cert" (include "api-service.fullname" .)) }}
+  namespace: {{ .Values.certificate.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "api-service.labels" . | nindent 4 }}
+    app.kubernetes.io/component: certificate
+spec:
+  secretName: {{ .Values.certificate.secretName | default (printf "%s-tls-cert" (include "api-service.fullname" .)) }}
+  issuerRef:
+    name: {{ .Values.certificate.issuerRef.name }}
+    kind: {{ .Values.certificate.issuerRef.kind | default "ClusterIssuer" }}
+    {{- if .Values.certificate.issuerRef.group }}
+    group: {{ .Values.certificate.issuerRef.group }}
+    {{- end }}
+  dnsNames:
+  {{- range .Values.certificate.dnsNames }}
+  - {{ . | quote }}
+  {{- end }}
+  {{- if .Values.certificate.commonName }}
+  commonName: {{ .Values.certificate.commonName | quote }}
+  {{- end }}
+  {{- if .Values.certificate.duration }}
+  duration: {{ .Values.certificate.duration }}
+  {{- end }}
+  {{- if .Values.certificate.renewBefore }}
+  renewBefore: {{ .Values.certificate.renewBefore }}
+  {{- end }}
+  {{- if .Values.certificate.subject }}
+  subject:
+    {{- if .Values.certificate.subject.organizations }}
+    organizations:
+    {{- range .Values.certificate.subject.organizations }}
+    - {{ . | quote }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.certificate.subject.countries }}
+    countries:
+    {{- range .Values.certificate.subject.countries }}
+    - {{ . | quote }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.certificate.subject.organizationalUnits }}
+    organizationalUnits:
+    {{- range .Values.certificate.subject.organizationalUnits }}
+    - {{ . | quote }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.certificate.subject.localities }}
+    localities:
+    {{- range .Values.certificate.subject.localities }}
+    - {{ . | quote }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.certificate.subject.provinces }}
+    provinces:
+    {{- range .Values.certificate.subject.provinces }}
+    - {{ . | quote }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.certificate.subject.streetAddresses }}
+    streetAddresses:
+    {{- range .Values.certificate.subject.streetAddresses }}
+    - {{ . | quote }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.certificate.subject.postalCodes }}
+    postalCodes:
+    {{- range .Values.certificate.subject.postalCodes }}
+    - {{ . | quote }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.certificate.subject.serialNumber }}
+    serialNumber: {{ .Values.certificate.subject.serialNumber | quote }}
+    {{- end }}
+  {{- end }}
+  {{- if .Values.certificate.privateKey }}
+  privateKey:
+    {{- if .Values.certificate.privateKey.algorithm }}
+    algorithm: {{ .Values.certificate.privateKey.algorithm }}
+    {{- end }}
+    {{- if .Values.certificate.privateKey.encoding }}
+    encoding: {{ .Values.certificate.privateKey.encoding }}
+    {{- end }}
+    {{- if .Values.certificate.privateKey.size }}
+    size: {{ .Values.certificate.privateKey.size }}
+    {{- end }}
+    {{- if .Values.certificate.privateKey.rotationPolicy }}
+    rotationPolicy: {{ .Values.certificate.privateKey.rotationPolicy }}
+    {{- end }}
+  {{- end }}
+  {{- if .Values.certificate.usages }}
+  usages:
+  {{- range .Values.certificate.usages }}
+  - {{ . | quote }}
+  {{- end }}
+  {{- end }}
+  {{- if .Values.certificate.keystores }}
+  keystores:
+    {{- if .Values.certificate.keystores.jks }}
+    jks:
+      create: {{ .Values.certificate.keystores.jks.create }}
+      passwordSecretRef:
+        name: {{ .Values.certificate.keystores.jks.passwordSecretRef.name }}
+        key: {{ .Values.certificate.keystores.jks.passwordSecretRef.key }}
+    {{- end }}
+    {{- if .Values.certificate.keystores.pkcs12 }}
+    pkcs12:
+      create: {{ .Values.certificate.keystores.pkcs12.create }}
+      passwordSecretRef:
+        name: {{ .Values.certificate.keystores.pkcs12.passwordSecretRef.name }}
+        key: {{ .Values.certificate.keystores.pkcs12.passwordSecretRef.key }}
+    {{- end }}
+  {{- end }}
+  {{- if .Values.certificate.additionalOutputFormats }}
+  additionalOutputFormats:
+  {{- range .Values.certificate.additionalOutputFormats }}
+  - type: {{ .type }}
+  {{- end }}
+  {{- end }}
+{{- end }}

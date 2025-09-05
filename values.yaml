@@ -484,7 +484,7 @@ sidecars: []
 # Network policy
 # Custom network policy
 networkPolicy:
-  enabled: true
+  enabled: false
   namespace: ""
   ingressRules:
     - from:

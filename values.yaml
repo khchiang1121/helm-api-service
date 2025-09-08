@@ -257,12 +257,22 @@ podDisruptionBudget:
   minAvailable: 2
   maxUnavailable: 1
 
+# Container configuration
+container:
+  ports:
+    - name: http
+      port: 8201
+      protocol: TCP
+    - name: metrics
+      port: 9090
+      protocol: TCP
+
 # Health check configuration
 healthCheck:
   livenessProbe:
     enabled: true
     path: /health/
-    port: 8201
+    port: http  # Reference to container port name
     initialDelaySeconds: 30
     periodSeconds: 10
     timeoutSeconds: 5
@@ -270,7 +280,7 @@ healthCheck:
   readinessProbe:
     enabled: true
     path: /health/
-    port: 8201
+    port: http  # Reference to container port name
     initialDelaySeconds: 5
     periodSeconds: 5
     timeoutSeconds: 3

@@ -71,9 +71,9 @@ spec:
           image: "{{ include "api-service.image" . }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-          {{- range .Values.service.ports }}
+          {{- range .Values.container.ports }}
             - name: {{ .name }}
-              containerPort: {{ if kindIs "string" .targetPort }}{{ if eq .targetPort "http" }}{{ $.Values.configMap.data.APP_PORT | default "8201" }}{{ else if eq .targetPort "grpc" }}50051{{ else if eq .targetPort "metrics" }}9090{{ else }}{{ .port }}{{ end }}{{ else }}{{ .targetPort }}{{ end }}
+              containerPort: {{ .port }}
               protocol: {{ .protocol | default "TCP" }}
           {{- end }}
           {{- if .Values.healthCheck.livenessProbe.enabled }}

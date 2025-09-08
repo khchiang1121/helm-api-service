@@ -11,22 +11,26 @@ metadata:
   {{- end }}
 spec:
   type: {{ .Values.service.type | default "ClusterIP" }}
-
-  {{- $ports := .Values.service.ports -}}
-  {{- if or (not $ports) (eq (len $ports) 0) -}}
+  {{- $servicePorts := .Values.service.ports -}}
+  {{- $containerPorts := .Values.container.ports -}}
+  {{- if or (not $servicePorts) (eq (len $servicePorts) 0) -}}
     {{- fail "service.ports must be a non-empty list" -}}
   {{- end }}
   ports:
-  {{- range $i, $p := $ports }}
-  - name: {{ $p.name | default (printf "port-%d" (int $p.port)) }}
-    port: {{ required (printf "service.ports[%d].port is required" $i) $p.port }}
-    targetPort: {{ $p.targetPort | default ($p.name | default (printf "port-%d" (int $p.port))) }}
-    protocol: {{ $p.protocol | default "TCP" }}
-    {{- if $p.appProtocol }}
-    appProtocol: {{ $p.appProtocol }}
+  {{- range $i, $sp := $servicePorts }}
+  - name: {{ $sp.name | default (printf "port-%d" (int $sp.port)) }}
+    port: {{ required (printf "service.ports[%d].port is required" $i) $sp.port }}
+    {{- $targetPort := $sp.targetPort -}}
+    {{- if not $targetPort -}}
+      {{- $targetPort = $sp.name -}}
     {{- end }}
-    {{- if $p.nodePort }}
-    nodePort: {{ $p.nodePort }}
+    targetPort: {{ $targetPort }}
+    protocol: {{ $sp.protocol | default "TCP" }}
+    {{- if $sp.appProtocol }}
+    appProtocol: {{ $sp.appProtocol }}
+    {{- end }}
+    {{- if $sp.nodePort }}
+    nodePort: {{ $sp.nodePort }}
     {{- end }}
   {{- end }}
   selector:
